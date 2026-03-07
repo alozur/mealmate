@@ -2,7 +2,7 @@ import json
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 # ---------------------------------------------------------------------------
@@ -43,17 +43,17 @@ class ProfileResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
-    @model_validator(mode="before")
+    @field_validator("restrictions", mode="before")
     @classmethod
-    def parse_restrictions(cls, data: object) -> object:
-        if hasattr(data, "restrictions") and isinstance(data.restrictions, str):
+    def parse_restrictions(cls, v: object) -> list[str]:
+        if isinstance(v, str):
             try:
-                data.restrictions = json.loads(data.restrictions)
+                return json.loads(v)
             except (json.JSONDecodeError, TypeError):
-                data.restrictions = []
-        elif hasattr(data, "restrictions") and data.restrictions is None:
-            data.restrictions = []
-        return data
+                return []
+        if v is None:
+            return []
+        return v
 
 
 # ---------------------------------------------------------------------------
@@ -101,17 +101,17 @@ class MealResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
-    @model_validator(mode="before")
+    @field_validator("recipe_steps", mode="before")
     @classmethod
-    def parse_recipe_steps(cls, data: object) -> object:
-        if hasattr(data, "recipe_steps") and isinstance(data.recipe_steps, str):
+    def parse_recipe_steps(cls, v: object) -> list[str]:
+        if isinstance(v, str):
             try:
-                data.recipe_steps = json.loads(data.recipe_steps)
+                return json.loads(v)
             except (json.JSONDecodeError, TypeError):
-                data.recipe_steps = []
-        elif hasattr(data, "recipe_steps") and data.recipe_steps is None:
-            data.recipe_steps = []
-        return data
+                return []
+        if v is None:
+            return []
+        return v
 
 
 class MealPlanResponse(BaseModel):
