@@ -1,0 +1,38 @@
+services:
+  backend:
+    build: ./backend
+    container_name: mealmate-backend
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_shared:5432/${POSTGRES_DB}?ssl=disable
+      - DB_SCHEMA=${DB_SCHEMA:-mealmate}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - CORS_ORIGINS=http://localhost:3082
+    networks:
+      - mealmate-net
+      - postgres_infra_network
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: /api
+    container_name: mealmate-frontend
+    restart: unless-stopped
+    ports:
+      - "3082:80"
+    depends_on:
+      - backend
+    networks:
+      - mealmate-net
+
+networks:
+  mealmate-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+          gateway: 172.28.0.1
+  postgres_infra_network:
+    external: true
