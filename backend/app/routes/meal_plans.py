@@ -97,7 +97,10 @@ async def generate_meal_plan(
 ):
     profiles = await _get_all_profiles(db)
     if not profiles:
-        raise HTTPException(status_code=400, detail="No profiles found. Create at least one profile first.")
+        raise HTTPException(
+            status_code=400,
+            detail="No profiles found. Create at least one profile first.",
+        )
 
     week_start = body.week_start or _next_monday()
     week_end = week_start + timedelta(days=5)
@@ -124,9 +127,7 @@ async def generate_meal_plan(
 
 @router.get("", response_model=list[MealPlanResponse])
 async def list_meal_plans(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(MealPlan).order_by(MealPlan.created_at.desc())
-    )
+    result = await db.execute(select(MealPlan).order_by(MealPlan.created_at.desc()))
     return result.scalars().all()
 
 
@@ -168,7 +169,9 @@ async def regenerate_meal(
 
     new_meals_data = ai_response.get("meals", [])
     if not new_meals_data:
-        raise HTTPException(status_code=502, detail="AI did not return a replacement meal")
+        raise HTTPException(
+            status_code=502, detail="AI did not return a replacement meal"
+        )
 
     old_meal = await db.get(Meal, meal_id)
     if old_meal:
@@ -187,13 +190,19 @@ async def regenerate_meal(
     result = await db.execute(
         select(Meal)
         .options(selectinload(Meal.portions), selectinload(Meal.ingredients))
-        .where(Meal.meal_plan_id == plan_id, Meal.day_of_week == target_meal.day_of_week, Meal.meal_type == target_meal.meal_type)
+        .where(
+            Meal.meal_plan_id == plan_id,
+            Meal.day_of_week == target_meal.day_of_week,
+            Meal.meal_type == target_meal.meal_type,
+        )
         .order_by(Meal.created_at.desc())
         .limit(1)
     )
     new_meal = result.scalar_one_or_none()
     if not new_meal:
-        raise HTTPException(status_code=500, detail="Failed to retrieve regenerated meal")
+        raise HTTPException(
+            status_code=500, detail="Failed to retrieve regenerated meal"
+        )
     return new_meal
 
 

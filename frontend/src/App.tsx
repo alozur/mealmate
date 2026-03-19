@@ -4,6 +4,7 @@ import Dashboard from "./pages/Dashboard";
 import MealPlanPage from "./pages/MealPlanPage";
 import ShoppingListPage from "./pages/ShoppingListPage";
 import ProfilesPage from "./pages/ProfilesPage";
+import InventoryPage from "./pages/InventoryPage";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/meal-plans/:id" element={<MealPlanPage />} />
           <Route path="/shopping/:id" element={<ShoppingListPage />} />
           <Route path="/profiles" element={<ProfilesPage />} />
+          <Route path="/inventory" element={<InventoryPage />} />
         </Routes>
         <BottomNav />
       </div>

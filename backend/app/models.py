@@ -120,3 +120,21 @@ class Ingredient(Base):
     category: Mapped[str] = mapped_column(String(50), nullable=False, default="pantry")
 
     meal: Mapped[Meal] = relationship(back_populates="ingredients")
+
+
+class InventoryItem(Base):
+    __tablename__ = "inventory_items"
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    quantity: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    unit: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    category: Mapped[str] = mapped_column(String(50), nullable=False, default="other")
+    storage_location: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="fridge"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow
+    )

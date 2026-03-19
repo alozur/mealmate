@@ -1,8 +1,7 @@
 import json
 from collections.abc import AsyncGenerator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -18,7 +17,9 @@ engine = create_async_engine(
     echo=False,
     execution_options={"schema_translate_map": {None: None, "mealmate": None}},
 )
-TestSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+TestSessionLocal = async_sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -81,12 +82,36 @@ SAMPLE_AI_MEALS = {
             "prep_time_min": 10,
             "cook_time_min": 15,
             "ingredients": [
-                {"name": "Chicken breast", "quantity": "400", "unit": "g", "category": "protein"},
-                {"name": "Mixed greens", "quantity": "200", "unit": "g", "category": "produce"},
+                {
+                    "name": "Chicken breast",
+                    "quantity": "400",
+                    "unit": "g",
+                    "category": "protein",
+                },
+                {
+                    "name": "Mixed greens",
+                    "quantity": "200",
+                    "unit": "g",
+                    "category": "produce",
+                },
             ],
             "portions": [
-                {"profile_name": "Alonso", "serving_size": "1.5 portions", "calories": 650, "protein_g": 55, "carbs_g": 30, "fat_g": 20},
-                {"profile_name": "Maria", "serving_size": "1 portion", "calories": 450, "protein_g": 40, "carbs_g": 25, "fat_g": 15},
+                {
+                    "profile_name": "Alonso",
+                    "serving_size": "1.5 portions",
+                    "calories": 650,
+                    "protein_g": 55,
+                    "carbs_g": 30,
+                    "fat_g": 20,
+                },
+                {
+                    "profile_name": "Maria",
+                    "serving_size": "1 portion",
+                    "calories": 450,
+                    "protein_g": 40,
+                    "carbs_g": 25,
+                    "fat_g": 15,
+                },
             ],
         },
         {
@@ -98,12 +123,31 @@ SAMPLE_AI_MEALS = {
             "prep_time_min": 10,
             "cook_time_min": 25,
             "ingredients": [
-                {"name": "Salmon fillet", "quantity": "500", "unit": "g", "category": "protein"},
+                {
+                    "name": "Salmon fillet",
+                    "quantity": "500",
+                    "unit": "g",
+                    "category": "protein",
+                },
                 {"name": "Rice", "quantity": "300", "unit": "g", "category": "grains"},
             ],
             "portions": [
-                {"profile_name": "Alonso", "serving_size": "2 portions", "calories": 800, "protein_g": 60, "carbs_g": 70, "fat_g": 25},
-                {"profile_name": "Maria", "serving_size": "1 portion", "calories": 550, "protein_g": 45, "carbs_g": 50, "fat_g": 18},
+                {
+                    "profile_name": "Alonso",
+                    "serving_size": "2 portions",
+                    "calories": 800,
+                    "protein_g": 60,
+                    "carbs_g": 70,
+                    "fat_g": 25,
+                },
+                {
+                    "profile_name": "Maria",
+                    "serving_size": "1 portion",
+                    "calories": 550,
+                    "protein_g": 45,
+                    "carbs_g": 50,
+                    "fat_g": 18,
+                },
             ],
         },
     ]
@@ -120,12 +164,36 @@ SAMPLE_AI_REGENERATED = {
             "prep_time_min": 5,
             "cook_time_min": 0,
             "ingredients": [
-                {"name": "Turkey slices", "quantity": "200", "unit": "g", "category": "protein"},
-                {"name": "Tortilla", "quantity": "2", "unit": "pcs", "category": "grains"},
+                {
+                    "name": "Turkey slices",
+                    "quantity": "200",
+                    "unit": "g",
+                    "category": "protein",
+                },
+                {
+                    "name": "Tortilla",
+                    "quantity": "2",
+                    "unit": "pcs",
+                    "category": "grains",
+                },
             ],
             "portions": [
-                {"profile_name": "Alonso", "serving_size": "2 wraps", "calories": 600, "protein_g": 50, "carbs_g": 40, "fat_g": 18},
-                {"profile_name": "Maria", "serving_size": "1 wrap", "calories": 400, "protein_g": 35, "carbs_g": 30, "fat_g": 12},
+                {
+                    "profile_name": "Alonso",
+                    "serving_size": "2 wraps",
+                    "calories": 600,
+                    "protein_g": 50,
+                    "carbs_g": 40,
+                    "fat_g": 18,
+                },
+                {
+                    "profile_name": "Maria",
+                    "serving_size": "1 wrap",
+                    "calories": 400,
+                    "protein_g": 35,
+                    "carbs_g": 30,
+                    "fat_g": 12,
+                },
             ],
         }
     ]

@@ -1,9 +1,10 @@
 import { NavLink } from "react-router-dom";
-import { CalendarDays, ShoppingCart, Users } from "lucide-react";
+import { CalendarDays, Package, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { to: "/dashboard", label: "Plan", icon: CalendarDays },
+  { to: "/inventory", label: "Inventario", icon: Package },
   { to: "/profiles", label: "Profiles", icon: Users },
 ];
 

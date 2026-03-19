@@ -1,4 +1,4 @@
-import type { Profile, MealPlan, MealPlanDetail, ShoppingList } from "@/types";
+import type { Profile, MealPlan, MealPlanDetail, ShoppingList, InventoryItem } from "@/types";
 
 export const mockProfiles: Profile[] = [
   {
@@ -74,6 +74,36 @@ export const mockMealPlanDetail: MealPlanDetail = {
     },
   ],
 };
+
+export const mockInventoryItems: InventoryItem[] = [
+  {
+    id: "inv1",
+    name: "Pollo",
+    quantity: "500",
+    unit: "g",
+    category: "protein",
+    storage_location: "fridge",
+    created_at: "2026-03-10T10:00:00",
+  },
+  {
+    id: "inv2",
+    name: "Brócoli",
+    quantity: "300",
+    unit: "g",
+    category: "produce",
+    storage_location: "fridge",
+    created_at: "2026-03-10T11:00:00",
+  },
+  {
+    id: "inv3",
+    name: "Helado",
+    quantity: "1",
+    unit: "L",
+    category: "dairy",
+    storage_location: "freezer",
+    created_at: "2026-03-10T12:00:00",
+  },
+];
 
 export const mockShoppingList: ShoppingList = {
   categories: {

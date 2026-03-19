@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models import Ingredient, Meal, MealPlan
+from app.models import Meal, MealPlan
 from app.schemas import ShoppingListItem, ShoppingListResponse
 
 router = APIRouter(prefix="/api/meal-plans", tags=["shopping"])

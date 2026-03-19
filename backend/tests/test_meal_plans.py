@@ -10,8 +10,18 @@ async def _create_profiles(client: AsyncClient) -> list[dict]:
     """Helper to create two test profiles."""
     profiles = []
     for data in [
-        {"name": "Alonso", "goal": "muscle_gain", "calorie_target": 2800, "protein_target": 200},
-        {"name": "Maria", "goal": "fat_loss", "calorie_target": 1800, "protein_target": 130},
+        {
+            "name": "Alonso",
+            "goal": "muscle_gain",
+            "calorie_target": 2800,
+            "protein_target": 200,
+        },
+        {
+            "name": "Maria",
+            "goal": "fat_loss",
+            "calorie_target": 1800,
+            "protein_target": 130,
+        },
     ]:
         resp = await client.post("/api/profiles", json=data)
         profiles.append(resp.json())

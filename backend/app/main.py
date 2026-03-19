@@ -8,6 +8,7 @@ from app.database import Base, engine, settings
 from app.routes.profiles import router as profiles_router
 from app.routes.meal_plans import router as meal_plans_router
 from app.routes.shopping import router as shopping_router
+from app.routes.inventory import router as inventory_router
 
 
 @asynccontextmanager
@@ -45,6 +46,7 @@ app.add_middleware(
 app.include_router(profiles_router)
 app.include_router(meal_plans_router)
 app.include_router(shopping_router)
+app.include_router(inventory_router)
 
 
 @app.get("/health")

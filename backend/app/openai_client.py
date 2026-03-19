@@ -87,7 +87,7 @@ async def generate_weekly_plan(
 
 {profiles_text}
 
-Week: {week_start.strftime('%A %B %d, %Y')} to {week_end.strftime('%A %B %d, %Y')}
+Week: {week_start.strftime("%A %B %d, %Y")} to {week_end.strftime("%A %B %d, %Y")}
 
 Remember: Same meals for everyone, but adjust portion sizes so each person's lunch+dinner \
 combined gets them approximately to their remaining daily targets (after a ~400-500 kcal \
@@ -118,7 +118,14 @@ async def regenerate_single_meal(
 ) -> dict:
     client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
 
-    day_names = {1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday", 5: "Friday", 6: "Saturday"}
+    day_names = {
+        1: "Monday",
+        2: "Tuesday",
+        3: "Wednesday",
+        4: "Thursday",
+        5: "Friday",
+        6: "Saturday",
+    }
     profiles_text = _build_profiles_text(profiles)
     existing_list = "\n".join(f"- {m}" for m in existing_meals)
 
@@ -128,7 +135,7 @@ Existing meals this week (do NOT repeat these):
 {existing_list}
 
 Meal to replace:
-- Day: {day_names.get(day_of_week, 'Unknown')} {meal_type}
+- Day: {day_names.get(day_of_week, "Unknown")} {meal_type}
 - Previous meal was: {old_meal_name}
 
 Generate a DIFFERENT meal for this slot. Use the same JSON format but return only ONE meal.

@@ -32,10 +32,13 @@ async def test_create_profile(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_get_profile(client: AsyncClient):
-    create_resp = await client.post("/api/profiles", json={
-        "name": "Maria",
-        "goal": "fat_loss",
-    })
+    create_resp = await client.post(
+        "/api/profiles",
+        json={
+            "name": "Maria",
+            "goal": "fat_loss",
+        },
+    )
     profile_id = create_resp.json()["id"]
 
     resp = await client.get(f"/api/profiles/{profile_id}")
@@ -53,16 +56,22 @@ async def test_get_profile_not_found(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_update_profile(client: AsyncClient):
-    create_resp = await client.post("/api/profiles", json={
-        "name": "Test",
-        "goal": "maintenance",
-    })
+    create_resp = await client.post(
+        "/api/profiles",
+        json={
+            "name": "Test",
+            "goal": "maintenance",
+        },
+    )
     profile_id = create_resp.json()["id"]
 
-    resp = await client.put(f"/api/profiles/{profile_id}", json={
-        "name": "Updated",
-        "calorie_target": 3000,
-    })
+    resp = await client.put(
+        f"/api/profiles/{profile_id}",
+        json={
+            "name": "Updated",
+            "calorie_target": 3000,
+        },
+    )
     assert resp.status_code == 200
     assert resp.json()["name"] == "Updated"
     assert resp.json()["calorie_target"] == 3000
@@ -77,10 +86,13 @@ async def test_update_profile_not_found(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_delete_profile(client: AsyncClient):
-    create_resp = await client.post("/api/profiles", json={
-        "name": "ToDelete",
-        "goal": "fat_loss",
-    })
+    create_resp = await client.post(
+        "/api/profiles",
+        json={
+            "name": "ToDelete",
+            "goal": "fat_loss",
+        },
+    )
     profile_id = create_resp.json()["id"]
 
     resp = await client.delete(f"/api/profiles/{profile_id}")
@@ -98,15 +110,21 @@ async def test_delete_profile_not_found(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_create_profile_validation(client: AsyncClient):
-    resp = await client.post("/api/profiles", json={
-        "name": "",
-        "goal": "fat_loss",
-    })
+    resp = await client.post(
+        "/api/profiles",
+        json={
+            "name": "",
+            "goal": "fat_loss",
+        },
+    )
     assert resp.status_code == 422
 
-    resp = await client.post("/api/profiles", json={
-        "name": "Test",
-        "goal": "fat_loss",
-        "calorie_target": 100,  # below 500 min
-    })
+    resp = await client.post(
+        "/api/profiles",
+        json={
+            "name": "Test",
+            "goal": "fat_loss",
+            "calorie_target": 100,  # below 500 min
+        },
+    )
     assert resp.status_code == 422

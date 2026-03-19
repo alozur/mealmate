@@ -145,6 +145,39 @@ class ShoppingListResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Inventory schemas
+# ---------------------------------------------------------------------------
+
+
+class InventoryItemCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=200)
+    quantity: str | None = None
+    unit: str | None = None
+    category: str = Field(default="other", max_length=50)
+    storage_location: str = Field(default="fridge")
+
+
+class InventoryItemUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    quantity: str | None = None
+    unit: str | None = None
+    category: str | None = Field(default=None, max_length=50)
+    storage_location: str | None = None
+
+
+class InventoryItemResponse(BaseModel):
+    id: str
+    name: str
+    quantity: str | None
+    unit: str | None
+    category: str
+    storage_location: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+# ---------------------------------------------------------------------------
 # Common schemas
 # ---------------------------------------------------------------------------
 

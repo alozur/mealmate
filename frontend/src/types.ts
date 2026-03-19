@@ -64,6 +64,33 @@ export interface ShoppingList {
   categories: Record<string, ShoppingListItem[]>;
 }
 
+export interface InventoryItem {
+  id: string;
+  name: string;
+  quantity: string | null;
+  unit: string | null;
+  category: string;
+  storage_location: "fridge" | "freezer";
+  created_at: string;
+}
+
+export const STORAGE_LABELS: Record<string, string> = {
+  fridge: "Nevera",
+  freezer: "Congelador",
+};
+
+export const INVENTORY_CATEGORY_LABELS: Record<string, string> = {
+  produce: "Frutas y verduras",
+  protein: "Proteínas",
+  dairy: "Lácteos",
+  grains: "Cereales y granos",
+  pantry: "Despensa",
+  spices: "Especias",
+  oils: "Aceites",
+  beverages: "Bebidas",
+  other: "Otros",
+};
+
 export const DAY_NAMES: Record<number, string> = {
   1: "Monday",
   2: "Tuesday",
