@@ -1,0 +1,47 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main, dev]
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Deploy to Synology
+    needs: ci
+    runs-on: [self-hosted, synology]
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+    env:
+      ENV: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+      APP_PORT: ${{ github.ref == 'refs/heads/main' && '3082' || '3083' }}
+      SUBNET: ${{ github.ref == 'refs/heads/main' && '172.28.0.0/16' || '172.29.0.0/16' }}
+      GATEWAY: ${{ github.ref == 'refs/heads/main' && '172.28.0.1' || '172.29.0.1' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env file
+        run: |
+          cat <<EOF > .env
+          ENV=${ENV}
+          APP_PORT=${APP_PORT}
+          SUBNET=${SUBNET}
+          GATEWAY=${GATEWAY}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          DB_SCHEMA=${{ secrets.DB_SCHEMA }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL=${{ secrets.OPENAI_MODEL }}
+          CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
+          EOF
+
+      - name: Deploy with docker compose
+        run: |
+          docker compose -p mealmate-${ENV} down
+          docker compose -p mealmate-${ENV} up --build -d
+
+      - name: Cleanup .env
+        if: always()
+        run: rm -f .env
