@@ -28,13 +28,13 @@ jobs:
           APP_PORT=${APP_PORT}
           SUBNET=${SUBNET}
           GATEWAY=${GATEWAY}
-          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_USER=${{ vars.POSTGRES_USER }}
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-          DB_SCHEMA=${{ secrets.DB_SCHEMA }}
+          POSTGRES_DB=${{ vars.POSTGRES_DB }}
+          DB_SCHEMA=${{ vars.DB_SCHEMA }}
           OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL=${{ secrets.OPENAI_MODEL }}
-          CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
+          OPENAI_MODEL=${{ vars.OPENAI_MODEL }}
+          CORS_ORIGINS=${{ vars.CORS_ORIGINS }}
           EOF
 
       - name: Deploy with docker compose
