@@ -12,7 +12,7 @@ from app.auth import (
 from app.database import get_db, settings
 from app.dependencies import get_current_user
 from app.models import Profile, User
-from app.schemas import UserLogin, UserMeResponse, UserRegister, UserResponse
+from app.schemas import MessageResponse, ProfileLinkResponse, UserLogin, UserMeResponse, UserRegister, UserResponse
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -25,12 +25,14 @@ async def register(
     response: Response,
     db: AsyncSession = Depends(get_db),
 ):
+    # Validate invite code first — don't reveal capacity info to invalid callers
+    if body.invite_code != settings.INVITE_CODE:
+        raise HTTPException(status_code=403, detail="Invalid invite code")
+
+    # Hard cap for the 2-person household model
     count = await db.scalar(select(func.count()).select_from(User))
     if count >= MAX_USERS:
         raise HTTPException(status_code=403, detail="Registration closed")
-
-    if body.invite_code != settings.INVITE_CODE:
-        raise HTTPException(status_code=403, detail="Invalid invite code")
 
     email = body.email.lower()
 
@@ -68,7 +70,7 @@ async def login(
     return user
 
 
-@router.post("/logout")
+@router.post("/logout", response_model=MessageResponse)
 async def logout(
     response: Response,
     _: User = Depends(get_current_user),
@@ -94,7 +96,7 @@ async def me(
     )
 
 
-@router.put("/link-profile/{profile_id}")
+@router.put("/link-profile/{profile_id}", response_model=ProfileLinkResponse)
 async def link_profile(
     profile_id: str,
     current_user: User = Depends(get_current_user),

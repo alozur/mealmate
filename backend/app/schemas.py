@@ -208,6 +208,14 @@ class UserMeResponse(BaseModel):
     profile_name: str | None = None
 
 
+class ProfileLinkResponse(BaseModel):
+    id: str
+    name: str
+    user_id: str
+
+    model_config = {"from_attributes": True}
+
+
 # ---------------------------------------------------------------------------
 # Common schemas
 # ---------------------------------------------------------------------------

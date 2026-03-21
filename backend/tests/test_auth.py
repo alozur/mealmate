@@ -1,9 +1,10 @@
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import hash_password
-from app.models import User
+from app.models import Profile, User
 
 
 @pytest.mark.asyncio
@@ -208,9 +209,6 @@ async def test_link_profile_already_taken(
         json={"name": "Maria", "goal": "fat_loss"},
     )
     profile_id = profile_resp.json()["id"]
-
-    from app.models import Profile
-    from sqlalchemy import select
 
     result = await db_session.execute(
         select(Profile).where(Profile.id == profile_id)
