@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { CalendarDays, ChefHat, Loader2, ShoppingCart, Plus, Users } from "lucide-react";
 import { api } from "@/api/client";
 import type { MealPlan, MealPlanDetail, Profile } from "@/types";
-import { DAY_NAMES } from "@/types";
+import { DAY_NAMES, GOAL_LABELS } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function Dashboard() {
@@ -86,7 +86,7 @@ export default function Dashboard() {
                 }}
                 className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
               >
-                {p.name} ({p.goal.replace("_", " ")})
+                {p.name} ({GOAL_LABELS[p.goal] ?? p.goal})
               </button>
             ))}
           </div>
