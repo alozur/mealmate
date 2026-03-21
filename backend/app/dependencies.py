@@ -2,6 +2,8 @@ from fastapi import Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import jwt as pyjwt
+
 from app.auth import COOKIE_NAME, decode_jwt
 from app.database import get_db
 from app.models import User
@@ -16,8 +18,10 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:
         payload = decode_jwt(token)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    except pyjwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except pyjwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token payload")
