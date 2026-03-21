@@ -193,6 +193,12 @@ async def test_link_profile(auth_client: AsyncClient, test_user):
 
 
 @pytest.mark.asyncio
+async def test_protected_route_without_auth(client: AsyncClient):
+    resp = await client.get("/api/profiles")
+    assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
 async def test_link_profile_already_taken(
     auth_client: AsyncClient, db_session: AsyncSession
 ):

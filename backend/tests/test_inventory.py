@@ -3,14 +3,14 @@ from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_list_inventory_empty(client: AsyncClient):
-    resp = await client.get("/api/inventory")
+async def test_list_inventory_empty(auth_client: AsyncClient):
+    resp = await auth_client.get("/api/inventory")
     assert resp.status_code == 200
     assert resp.json() == []
 
 
 @pytest.mark.asyncio
-async def test_create_inventory_item(client: AsyncClient):
+async def test_create_inventory_item(auth_client: AsyncClient):
     data = {
         "name": "Pollo",
         "quantity": "500",
@@ -18,7 +18,7 @@ async def test_create_inventory_item(client: AsyncClient):
         "category": "protein",
         "storage_location": "fridge",
     }
-    resp = await client.post("/api/inventory", json=data)
+    resp = await auth_client.post("/api/inventory", json=data)
     assert resp.status_code == 201
     body = resp.json()
     assert body["name"] == "Pollo"
@@ -30,8 +30,8 @@ async def test_create_inventory_item(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_create_inventory_item_defaults(client: AsyncClient):
-    resp = await client.post("/api/inventory", json={"name": "Leche"})
+async def test_create_inventory_item_defaults(auth_client: AsyncClient):
+    resp = await auth_client.post("/api/inventory", json={"name": "Leche"})
     assert resp.status_code == 201
     body = resp.json()
     assert body["name"] == "Leche"
@@ -42,8 +42,8 @@ async def test_create_inventory_item_defaults(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_update_inventory_item(client: AsyncClient):
-    create_resp = await client.post(
+async def test_update_inventory_item(auth_client: AsyncClient):
+    create_resp = await auth_client.post(
         "/api/inventory",
         json={
             "name": "Leche",
@@ -52,7 +52,7 @@ async def test_update_inventory_item(client: AsyncClient):
     )
     item_id = create_resp.json()["id"]
 
-    resp = await client.put(
+    resp = await auth_client.put(
         f"/api/inventory/{item_id}",
         json={
             "name": "Leche entera",
@@ -68,38 +68,38 @@ async def test_update_inventory_item(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_update_inventory_item_not_found(client: AsyncClient):
-    resp = await client.put("/api/inventory/nonexistent", json={"name": "X"})
+async def test_update_inventory_item_not_found(auth_client: AsyncClient):
+    resp = await auth_client.put("/api/inventory/nonexistent", json={"name": "X"})
     assert resp.status_code == 404
 
 
 @pytest.mark.asyncio
-async def test_delete_inventory_item(client: AsyncClient):
-    create_resp = await client.post("/api/inventory", json={"name": "Yogur"})
+async def test_delete_inventory_item(auth_client: AsyncClient):
+    create_resp = await auth_client.post("/api/inventory", json={"name": "Yogur"})
     item_id = create_resp.json()["id"]
 
-    resp = await client.delete(f"/api/inventory/{item_id}")
+    resp = await auth_client.delete(f"/api/inventory/{item_id}")
     assert resp.status_code == 204
 
-    resp = await client.get("/api/inventory")
+    resp = await auth_client.get("/api/inventory")
     assert all(item["id"] != item_id for item in resp.json())
 
 
 @pytest.mark.asyncio
-async def test_delete_inventory_item_not_found(client: AsyncClient):
-    resp = await client.delete("/api/inventory/nonexistent")
+async def test_delete_inventory_item_not_found(auth_client: AsyncClient):
+    resp = await auth_client.delete("/api/inventory/nonexistent")
     assert resp.status_code == 404
 
 
 @pytest.mark.asyncio
-async def test_create_inventory_item_validation(client: AsyncClient):
-    resp = await client.post("/api/inventory", json={"name": ""})
+async def test_create_inventory_item_validation(auth_client: AsyncClient):
+    resp = await auth_client.post("/api/inventory", json={"name": ""})
     assert resp.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_inventory_freezer_location(client: AsyncClient):
-    resp = await client.post(
+async def test_inventory_freezer_location(auth_client: AsyncClient):
+    resp = await auth_client.post(
         "/api/inventory",
         json={
             "name": "Helado",

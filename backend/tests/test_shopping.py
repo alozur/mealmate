@@ -26,10 +26,10 @@ async def _setup_plan(client: AsyncClient) -> str:
 
 
 @pytest.mark.asyncio
-async def test_shopping_list(client: AsyncClient):
-    plan_id = await _setup_plan(client)
+async def test_shopping_list(auth_client: AsyncClient):
+    plan_id = await _setup_plan(auth_client)
 
-    resp = await client.get(f"/api/meal-plans/{plan_id}/shopping-list")
+    resp = await auth_client.get(f"/api/meal-plans/{plan_id}/shopping-list")
     assert resp.status_code == 200
     body = resp.json()
     assert "categories" in body
@@ -46,16 +46,16 @@ async def test_shopping_list(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_shopping_list_not_found(client: AsyncClient):
-    resp = await client.get("/api/meal-plans/nonexistent/shopping-list")
+async def test_shopping_list_not_found(auth_client: AsyncClient):
+    resp = await auth_client.get("/api/meal-plans/nonexistent/shopping-list")
     assert resp.status_code == 404
 
 
 @pytest.mark.asyncio
-async def test_shopping_list_aggregates_quantities(client: AsyncClient):
-    plan_id = await _setup_plan(client)
+async def test_shopping_list_aggregates_quantities(auth_client: AsyncClient):
+    plan_id = await _setup_plan(auth_client)
 
-    resp = await client.get(f"/api/meal-plans/{plan_id}/shopping-list")
+    resp = await auth_client.get(f"/api/meal-plans/{plan_id}/shopping-list")
     body = resp.json()
 
     # All items should have total_quantity set

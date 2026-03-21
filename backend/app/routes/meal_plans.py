@@ -7,7 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models import Ingredient, Meal, MealPlan, MealPortion, Profile
+from app.dependencies import get_current_user
+from app.models import Ingredient, Meal, MealPlan, MealPortion, Profile, User
 from app.openai_client import generate_weekly_plan, regenerate_single_meal
 from app.schemas import (
     MealPlanDetailResponse,
@@ -93,7 +94,9 @@ async def _persist_meals(
 
 @router.post("/generate", response_model=MealPlanDetailResponse, status_code=201)
 async def generate_meal_plan(
-    body: MealPlanGenerate, db: AsyncSession = Depends(get_db)
+    body: MealPlanGenerate,
+    _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     profiles = await _get_all_profiles(db)
     if not profiles:
@@ -126,13 +129,20 @@ async def generate_meal_plan(
 
 
 @router.get("", response_model=list[MealPlanResponse])
-async def list_meal_plans(db: AsyncSession = Depends(get_db)):
+async def list_meal_plans(
+    _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     result = await db.execute(select(MealPlan).order_by(MealPlan.created_at.desc()))
     return result.scalars().all()
 
 
 @router.get("/{plan_id}", response_model=MealPlanDetailResponse)
-async def get_meal_plan(plan_id: str, db: AsyncSession = Depends(get_db)):
+async def get_meal_plan(
+    plan_id: str,
+    _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     plan = await _get_plan_detail(db, plan_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Meal plan not found")
@@ -141,7 +151,10 @@ async def get_meal_plan(plan_id: str, db: AsyncSession = Depends(get_db)):
 
 @router.post("/{plan_id}/regenerate-meal/{meal_id}", response_model=MealResponse)
 async def regenerate_meal(
-    plan_id: str, meal_id: str, db: AsyncSession = Depends(get_db)
+    plan_id: str,
+    meal_id: str,
+    _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     plan = await _get_plan_detail(db, plan_id)
     if not plan:
@@ -207,7 +220,11 @@ async def regenerate_meal(
 
 
 @router.delete("/{plan_id}", status_code=204)
-async def delete_meal_plan(plan_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_meal_plan(
+    plan_id: str,
+    _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     plan = await db.get(MealPlan, plan_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Meal plan not found")
