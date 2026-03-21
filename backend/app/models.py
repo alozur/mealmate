@@ -16,6 +16,21 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow
+    )
+
+    profile: Mapped["Profile | None"] = relationship(back_populates="user")
+
+
 class Profile(Base):
     __tablename__ = "profiles"
 
@@ -32,7 +47,11 @@ class Profile(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.utcnow
     )
+    user_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("users.id"), nullable=True, unique=True
+    )
 
+    user: Mapped["User | None"] = relationship(back_populates="profile")
     meal_portions: Mapped[list["MealPortion"]] = relationship(back_populates="profile")
 
 
