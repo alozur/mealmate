@@ -1,13 +1,20 @@
 import json
+import os
 from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock
+
+# Set required env vars before importing app modules so Settings() doesn't fail
+os.environ.setdefault("JWT_SECRET", "test-secret-key-for-testing-only")
+os.environ.setdefault("INVITE_CODE", "test-invite")
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from app.auth import create_jwt, hash_password
 from app.database import Base, get_db
 from app.main import app
+from app.models import User
 
 # In-memory SQLite for tests (no schema support, so override schema_translate_map)
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -20,6 +27,15 @@ engine = create_async_engine(
 TestSessionLocal = async_sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False
 )
+
+
+@pytest_asyncio.fixture(autouse=True, scope="session")
+def override_settings():
+    """Provide required settings for tests so they don't need a .env file."""
+    import app.database as db_module
+    db_module.settings.JWT_SECRET = "test-secret-key-for-testing-only"
+    db_module.settings.INVITE_CODE = "test-invite"
+    yield
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -55,6 +71,40 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     app.dependency_overrides[get_db] = override_get_db
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
+    app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def test_user(db_session: AsyncSession) -> User:
+    """Create a test user and return it."""
+    user = User(
+        email="test@example.com",
+        hashed_password=hash_password("testpassword123"),
+    )
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+    return user
+
+
+@pytest_asyncio.fixture
+async def auth_client(
+    db_session: AsyncSession, test_user: User
+) -> AsyncGenerator[AsyncClient, None]:
+    """AsyncClient with a valid auth cookie."""
+
+    async def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    token = create_jwt(test_user.id, test_user.email)
+    transport = ASGITransport(app=app)
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test",
+        cookies={"mealmate_auth": token},
+    ) as ac:
         yield ac
     app.dependency_overrides.clear()
 
