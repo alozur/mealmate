@@ -4,6 +4,7 @@ import { CalendarDays, ChefHat, Loader2, ShoppingCart, Plus, Users } from "lucid
 import { api } from "@/api/client";
 import type { MealPlan, MealPlanDetail, Profile } from "@/types";
 import { DAY_NAMES } from "@/types";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -12,6 +13,8 @@ export default function Dashboard() {
   const [generating, setGenerating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const [linkingProfile, setLinkingProfile] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -61,6 +64,32 @@ export default function Dashboard() {
       {error && (
         <div className="bg-destructive/10 text-destructive rounded-lg p-3 mb-4 text-sm">
           {error}
+        </div>
+      )}
+
+      {user && !user.profile_id && profiles.length > 0 && (
+        <div className="mx-4 mt-4 rounded-lg border bg-card p-4">
+          <p className="text-sm font-medium">Which profile is yours?</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {profiles.map((p) => (
+              <button
+                key={p.id}
+                disabled={linkingProfile}
+                onClick={async () => {
+                  setLinkingProfile(true);
+                  try {
+                    await api.put(`/auth/link-profile/${p.id}`);
+                    window.location.reload();
+                  } catch {
+                    setLinkingProfile(false);
+                  }
+                }}
+                className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+              >
+                {p.name} ({p.goal.replace("_", " ")})
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
