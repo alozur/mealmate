@@ -9,6 +9,8 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3082}
+      - JWT_SECRET=${JWT_SECRET}
+      - INVITE_CODE=${INVITE_CODE}
     networks:
       - mealmate-net
       - postgres_infra_network
