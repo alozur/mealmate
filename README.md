@@ -47,7 +47,7 @@ npm run dev  # start dev server on :5173
 docker compose up --build
 
 # Run migrations (first time or after model changes)
-docker compose run --rm backend alembic upgrade head
+docker compose run --rm --no-deps backend alembic upgrade head
 ```
 
 Frontend: `http://localhost:3082` | Backend API: `http://localhost:3082/api`
@@ -101,9 +101,10 @@ uv run alembic downgrade <rev>      # rollback to specific revision
 
 ### How it works in CI/CD
 
-- **CI**: A `migrate` job runs `alembic upgrade head` against a fresh PostgreSQL to validate migrations
-- **Deploy**: Migrations run automatically (`docker compose run --rm backend alembic upgrade head`) before services start
-- Both workflows support `workflow_dispatch` for manual triggering
+- **CI** (`ci.yml`): A `migrate` job runs `alembic upgrade head` against a fresh PostgreSQL to validate migrations
+- **Migrate** (`migrate.yml`): Standalone workflow that runs migrations. Called by deploy, or triggered manually from Actions tab
+- **Deploy** (`deploy.yml`): Pipeline is CI → Migrate → Deploy. Migrations run before services start
+- All workflows support `workflow_dispatch` for manual triggering
 
 ## Project Structure
 
@@ -114,7 +115,8 @@ mealmate/
 ├── docker-compose.yml
 ├── .github/workflows/
 │   ├── ci.yml                        # Lint, tests, migration validation
-│   └── deploy.yml                    # Deploy to Synology (dev/prod)
+│   ├── migrate.yml                   # Standalone migration workflow
+│   └── deploy.yml                    # CI → Migrate → Deploy (dev/prod)
 ├── backend/
 │   ├── Dockerfile
 │   ├── requirements.txt
@@ -222,4 +224,4 @@ Deploys automatically via GitHub Actions to a self-hosted Synology runner:
 - Push to `main` → deploys to prod environment (port 3082)
 - Manual trigger via GitHub Actions UI (`workflow_dispatch`)
 
-Deploy order: CI passes → build images → run migrations → start services.
+Pipeline: CI → Migrate → Deploy.

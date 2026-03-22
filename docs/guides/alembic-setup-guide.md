@@ -334,7 +334,7 @@ jobs:
         run: docker compose -p yourapp-${ENV} build backend
 
       - name: Run alembic upgrade head
-        run: docker compose -p yourapp-${ENV} run --rm backend alembic upgrade head
+        run: docker compose -p yourapp-${ENV} run --rm --no-deps backend alembic upgrade head
 
       - name: Cleanup .env
         if: always()
