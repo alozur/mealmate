@@ -32,9 +32,7 @@ jobs:
         run: |
           cat <<EOF > .env
           ENV=${ENV}
-          POSTGRES_USER=${{ vars.POSTGRES_USER }}
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB=${{ vars.POSTGRES_DB }}
+          DATABASE_URL=postgresql+asyncpg://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres_shared:5432/${{ vars.POSTGRES_DB }}?ssl=disable
           DB_SCHEMA=${{ vars.DB_SCHEMA }}
           OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL=${{ vars.OPENAI_MODEL }}
