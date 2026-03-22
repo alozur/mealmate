@@ -33,6 +33,7 @@ TestSessionLocal = async_sessionmaker(
 def override_settings():
     """Provide required settings for tests so they don't need a .env file."""
     import app.database as db_module
+
     db_module.settings.JWT_SECRET = "test-secret-key-for-testing-only"
     db_module.settings.INVITE_CODE = "test-invite"
     yield

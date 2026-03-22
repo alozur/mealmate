@@ -118,7 +118,9 @@ async def test_regenerate_meal(auth_client: AsyncClient):
         plan_id = create_resp.json()["id"]
         meal_id = create_resp.json()["meals"][0]["id"]
 
-        resp = await auth_client.post(f"/api/meal-plans/{plan_id}/regenerate-meal/{meal_id}")
+        resp = await auth_client.post(
+            f"/api/meal-plans/{plan_id}/regenerate-meal/{meal_id}"
+        )
 
     assert resp.status_code == 200
     body = resp.json()
@@ -140,7 +142,9 @@ async def test_regenerate_meal_not_found(auth_client: AsyncClient):
         create_resp = await auth_client.post("/api/meal-plans/generate", json={})
 
     plan_id = create_resp.json()["id"]
-    resp = await auth_client.post(f"/api/meal-plans/{plan_id}/regenerate-meal/nonexistent")
+    resp = await auth_client.post(
+        f"/api/meal-plans/{plan_id}/regenerate-meal/nonexistent"
+    )
     assert resp.status_code == 404
 
 

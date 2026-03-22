@@ -12,7 +12,14 @@ from app.auth import (
 from app.database import get_db, settings
 from app.dependencies import get_current_user
 from app.models import Profile, User
-from app.schemas import MessageResponse, ProfileLinkResponse, UserLogin, UserMeResponse, UserRegister, UserResponse
+from app.schemas import (
+    MessageResponse,
+    ProfileLinkResponse,
+    UserLogin,
+    UserMeResponse,
+    UserRegister,
+    UserResponse,
+)
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -84,9 +91,7 @@ async def me(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(Profile).where(Profile.user_id == current_user.id)
-    )
+    result = await db.execute(select(Profile).where(Profile.user_id == current_user.id))
     profile = result.scalar_one_or_none()
     return UserMeResponse(
         id=current_user.id,
@@ -106,7 +111,9 @@ async def link_profile(
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
     if profile.user_id and profile.user_id != current_user.id:
-        raise HTTPException(status_code=409, detail="Profile already linked to another user")
+        raise HTTPException(
+            status_code=409, detail="Profile already linked to another user"
+        )
     profile.user_id = current_user.id
     await db.commit()
     await db.refresh(profile)

@@ -36,7 +36,9 @@ def decode_jwt(token: str) -> dict:
 
 def _is_production() -> bool:
     """Detect production by checking if any CORS origin uses HTTPS."""
-    return any(o.strip().startswith("https://") for o in settings.CORS_ORIGINS.split(","))
+    return any(
+        o.strip().startswith("https://") for o in settings.CORS_ORIGINS.split(",")
+    )
 
 
 def set_auth_cookie(response: Response, token: str) -> None:

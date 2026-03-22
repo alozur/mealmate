@@ -117,7 +117,9 @@ async def test_login_success(client: AsyncClient, db_session: AsyncSession):
 
 
 @pytest.mark.asyncio
-async def test_login_case_insensitive_email(client: AsyncClient, db_session: AsyncSession):
+async def test_login_case_insensitive_email(
+    client: AsyncClient, db_session: AsyncSession
+):
     user = User(
         email="case@example.com",
         hashed_password=hash_password("mypassword123"),
@@ -216,9 +218,7 @@ async def test_link_profile_already_taken(
     )
     profile_id = profile_resp.json()["id"]
 
-    result = await db_session.execute(
-        select(Profile).where(Profile.id == profile_id)
-    )
+    result = await db_session.execute(select(Profile).where(Profile.id == profile_id))
     profile = result.scalar_one()
     profile.user_id = other_user.id
     await db_session.commit()
