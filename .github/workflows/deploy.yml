@@ -18,9 +18,16 @@ jobs:
   ci:
     uses: ./.github/workflows/ci.yml
 
+  migrate:
+    needs: ci
+    uses: ./.github/workflows/migrate.yml
+    with:
+      environment: ${{ inputs.environment || (github.ref == 'refs/heads/main' && 'prod' || 'dev') }}
+    secrets: inherit
+
   deploy:
     name: Deploy to Synology
-    needs: ci
+    needs: migrate
     runs-on: [self-hosted, synology]
     environment: ${{ inputs.environment || (github.ref == 'refs/heads/main' && 'prod' || 'dev') }}
     env:
@@ -52,14 +59,8 @@ jobs:
       - name: Stop existing services
         run: docker compose -p mealmate-${ENV} down
 
-      - name: Build images
-        run: docker compose -p mealmate-${ENV} build
-
-      - name: Run database migrations
-        run: docker compose -p mealmate-${ENV} run --rm backend alembic upgrade head
-
-      - name: Start services
-        run: docker compose -p mealmate-${ENV} up -d
+      - name: Build and start services
+        run: docker compose -p mealmate-${ENV} up --build -d
 
       - name: Cleanup .env
         if: always()
