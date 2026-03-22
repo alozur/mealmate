@@ -47,7 +47,7 @@ jobs:
         run: docker compose -p mealmate-${ENV} build backend
 
       - name: Run alembic upgrade head
-        run: docker compose -p mealmate-${ENV} run --rm backend alembic upgrade head
+        run: docker compose -p mealmate-${ENV} run --rm --no-deps backend alembic upgrade head
 
       - name: Cleanup .env
         if: always()
