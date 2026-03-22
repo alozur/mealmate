@@ -3,6 +3,16 @@ name: Deploy
 on:
   push:
     branches: [main, dev]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
 
 jobs:
   ci:
@@ -12,9 +22,9 @@ jobs:
     name: Deploy to Synology
     needs: ci
     runs-on: [self-hosted, synology]
-    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+    environment: ${{ inputs.environment || (github.ref == 'refs/heads/main' && 'prod' || 'dev') }}
     env:
-      ENV: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+      ENV: ${{ inputs.environment || (github.ref == 'refs/heads/main' && 'prod' || 'dev') }}
       APP_PORT: ${{ github.ref == 'refs/heads/main' && '3082' || '3083' }}
       SUBNET: ${{ github.ref == 'refs/heads/main' && '172.28.0.0/16' || '172.29.0.0/16' }}
       GATEWAY: ${{ github.ref == 'refs/heads/main' && '172.28.0.1' || '172.29.0.1' }}
@@ -39,10 +49,17 @@ jobs:
           INVITE_CODE=${{ vars.INVITE_CODE }}
           EOF
 
-      - name: Deploy with docker compose
-        run: |
-          docker compose -p mealmate-${ENV} down
-          docker compose -p mealmate-${ENV} up --build -d
+      - name: Stop existing services
+        run: docker compose -p mealmate-${ENV} down
+
+      - name: Build images
+        run: docker compose -p mealmate-${ENV} build
+
+      - name: Run database migrations
+        run: docker compose -p mealmate-${ENV} run --rm backend alembic upgrade head
+
+      - name: Start services
+        run: docker compose -p mealmate-${ENV} up -d
 
       - name: Cleanup .env
         if: always()
