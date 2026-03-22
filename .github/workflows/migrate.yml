@@ -44,10 +44,15 @@ jobs:
           EOF
 
       - name: Build backend image
-        run: docker compose -p mealmate-${ENV} build backend
+        run: docker build -t mealmate-backend-migrate ./backend
 
       - name: Run alembic upgrade head
-        run: docker compose -p mealmate-${ENV} run --rm --no-deps backend alembic upgrade head
+        run: |
+          docker run --rm \
+            --env-file .env \
+            --network postgres_infra_network \
+            mealmate-backend-migrate \
+            alembic upgrade head
 
       - name: Cleanup .env
         if: always()
