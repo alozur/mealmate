@@ -5,20 +5,28 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models import Profile
+from app.dependencies import get_current_user
+from app.models import Profile, User
 from app.schemas import ProfileCreate, ProfileResponse, ProfileUpdate
 
 router = APIRouter(prefix="/api/profiles", tags=["profiles"])
 
 
 @router.get("", response_model=list[ProfileResponse])
-async def list_profiles(db: AsyncSession = Depends(get_db)):
+async def list_profiles(
+    _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     result = await db.execute(select(Profile).order_by(Profile.created_at))
     return result.scalars().all()
 
 
 @router.post("", response_model=ProfileResponse, status_code=201)
-async def create_profile(body: ProfileCreate, db: AsyncSession = Depends(get_db)):
+async def create_profile(
+    body: ProfileCreate,
+    _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     profile = Profile(
         name=body.name,
         goal=body.goal,
@@ -35,7 +43,11 @@ async def create_profile(body: ProfileCreate, db: AsyncSession = Depends(get_db)
 
 
 @router.get("/{profile_id}", response_model=ProfileResponse)
-async def get_profile(profile_id: str, db: AsyncSession = Depends(get_db)):
+async def get_profile(
+    profile_id: str,
+    _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     profile = await db.get(Profile, profile_id)
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
@@ -44,7 +56,10 @@ async def get_profile(profile_id: str, db: AsyncSession = Depends(get_db)):
 
 @router.put("/{profile_id}", response_model=ProfileResponse)
 async def update_profile(
-    profile_id: str, body: ProfileUpdate, db: AsyncSession = Depends(get_db)
+    profile_id: str,
+    body: ProfileUpdate,
+    _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     profile = await db.get(Profile, profile_id)
     if not profile:
@@ -63,7 +78,11 @@ async def update_profile(
 
 
 @router.delete("/{profile_id}", status_code=204)
-async def delete_profile(profile_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_profile(
+    profile_id: str,
+    _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     profile = await db.get(Profile, profile_id)
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")

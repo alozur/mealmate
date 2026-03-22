@@ -1,0 +1,57 @@
+name: Migrate
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  migrate:
+    name: Run Database Migrations
+    runs-on: [self-hosted, synology]
+    environment: ${{ inputs.environment }}
+    env:
+      ENV: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env file
+        run: |
+          cat <<EOF > .env
+          ENV=${ENV}
+          DATABASE_URL=postgresql+asyncpg://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres_shared:5432/${{ vars.POSTGRES_DB }}?ssl=disable
+          DB_SCHEMA=${{ vars.DB_SCHEMA }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL=${{ vars.OPENAI_MODEL }}
+          CORS_ORIGINS=${{ vars.CORS_ORIGINS }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          INVITE_CODE=${{ vars.INVITE_CODE }}
+          EOF
+
+      - name: Build backend image
+        run: docker build -t mealmate-backend-migrate ./backend
+
+      - name: Run alembic upgrade head
+        run: |
+          docker run --rm \
+            --env-file .env \
+            --network postgres_infra_network \
+            mealmate-backend-migrate \
+            alembic upgrade head
+
+      - name: Cleanup .env
+        if: always()
+        run: rm -f .env

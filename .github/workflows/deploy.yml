@@ -1,0 +1,67 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  migrate:
+    needs: ci
+    uses: ./.github/workflows/migrate.yml
+    with:
+      environment: ${{ inputs.environment || (github.ref == 'refs/heads/main' && 'prod' || 'dev') }}
+    secrets: inherit
+
+  deploy:
+    name: Deploy to Synology
+    needs: migrate
+    runs-on: [self-hosted, synology]
+    environment: ${{ inputs.environment || (github.ref == 'refs/heads/main' && 'prod' || 'dev') }}
+    env:
+      ENV: ${{ inputs.environment || (github.ref == 'refs/heads/main' && 'prod' || 'dev') }}
+      APP_PORT: ${{ github.ref == 'refs/heads/main' && '3082' || '3083' }}
+      SUBNET: ${{ github.ref == 'refs/heads/main' && '172.28.0.0/16' || '172.29.0.0/16' }}
+      GATEWAY: ${{ github.ref == 'refs/heads/main' && '172.28.0.1' || '172.29.0.1' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env file
+        run: |
+          cat <<EOF > .env
+          ENV=${ENV}
+          APP_PORT=${APP_PORT}
+          SUBNET=${SUBNET}
+          GATEWAY=${GATEWAY}
+          POSTGRES_USER=${{ vars.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB=${{ vars.POSTGRES_DB }}
+          DB_SCHEMA=${{ vars.DB_SCHEMA }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL=${{ vars.OPENAI_MODEL }}
+          CORS_ORIGINS=${{ vars.CORS_ORIGINS }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          INVITE_CODE=${{ vars.INVITE_CODE }}
+          EOF
+
+      - name: Stop existing services
+        run: docker compose -p mealmate-${ENV} down
+
+      - name: Build and start services
+        run: docker compose -p mealmate-${ENV} up --build -d
+
+      - name: Cleanup .env
+        if: always()
+        run: rm -f .env

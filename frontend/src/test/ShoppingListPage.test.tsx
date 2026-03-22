@@ -13,6 +13,17 @@ vi.mock("@/api/client", () => ({
   },
 }));
 
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({
+    user: { id: "1", email: "test@example.com", profile_id: "p1", profile_name: "Test" },
+    isLoading: false,
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+  }),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 import { api } from "@/api/client";
 const mockedApi = vi.mocked(api);
 

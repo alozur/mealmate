@@ -74,6 +74,19 @@ export interface InventoryItem {
   created_at: string;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  created_at: string;
+}
+
+export interface UserMe {
+  id: string;
+  email: string;
+  profile_id: string | null;
+  profile_name: string | null;
+}
+
 export const STORAGE_LABELS: Record<string, string> = {
   fridge: "Nevera",
   freezer: "Congelador",

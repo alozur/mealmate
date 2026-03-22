@@ -3,14 +3,18 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models import InventoryItem
+from app.dependencies import get_current_user
+from app.models import InventoryItem, User
 from app.schemas import InventoryItemCreate, InventoryItemResponse, InventoryItemUpdate
 
 router = APIRouter(prefix="/api/inventory", tags=["inventory"])
 
 
 @router.get("", response_model=list[InventoryItemResponse])
-async def list_inventory(db: AsyncSession = Depends(get_db)):
+async def list_inventory(
+    _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     result = await db.execute(
         select(InventoryItem).order_by(InventoryItem.created_at.desc())
     )
@@ -19,7 +23,9 @@ async def list_inventory(db: AsyncSession = Depends(get_db)):
 
 @router.post("", response_model=InventoryItemResponse, status_code=201)
 async def create_inventory_item(
-    body: InventoryItemCreate, db: AsyncSession = Depends(get_db)
+    body: InventoryItemCreate,
+    _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     item = InventoryItem(
         name=body.name,
@@ -36,7 +42,10 @@ async def create_inventory_item(
 
 @router.put("/{item_id}", response_model=InventoryItemResponse)
 async def update_inventory_item(
-    item_id: str, body: InventoryItemUpdate, db: AsyncSession = Depends(get_db)
+    item_id: str,
+    body: InventoryItemUpdate,
+    _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     item = await db.get(InventoryItem, item_id)
     if not item:
@@ -52,7 +61,11 @@ async def update_inventory_item(
 
 
 @router.delete("/{item_id}", status_code=204)
-async def delete_inventory_item(item_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_inventory_item(
+    item_id: str,
+    _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     item = await db.get(InventoryItem, item_id)
     if not item:
         raise HTTPException(status_code=404, detail="Inventory item not found")

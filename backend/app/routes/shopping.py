@@ -6,14 +6,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models import Meal, MealPlan
+from app.dependencies import get_current_user
+from app.models import Meal, MealPlan, User
 from app.schemas import ShoppingListItem, ShoppingListResponse
 
 router = APIRouter(prefix="/api/meal-plans", tags=["shopping"])
 
 
 @router.get("/{plan_id}/shopping-list", response_model=ShoppingListResponse)
-async def get_shopping_list(plan_id: str, db: AsyncSession = Depends(get_db)):
+async def get_shopping_list(
+    plan_id: str,
+    _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     result = await db.execute(
         select(MealPlan)
         .options(selectinload(MealPlan.meals).selectinload(Meal.ingredients))

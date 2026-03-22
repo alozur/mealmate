@@ -2,7 +2,7 @@ import json
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 # ---------------------------------------------------------------------------
@@ -173,6 +173,45 @@ class InventoryItemResponse(BaseModel):
     category: str
     storage_location: str
     created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+# ---------------------------------------------------------------------------
+# Auth schemas
+# ---------------------------------------------------------------------------
+
+
+class UserRegister(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+    invite_code: str
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class UserMeResponse(BaseModel):
+    id: str
+    email: str
+    profile_id: str | None = None
+    profile_name: str | None = None
+
+
+class ProfileLinkResponse(BaseModel):
+    id: str
+    name: str
+    user_id: str
 
     model_config = {"from_attributes": True}
 

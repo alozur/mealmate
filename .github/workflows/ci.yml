@@ -2,9 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   lint:
@@ -51,3 +53,37 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run test
+
+  migrate:
+    name: Validate Migrations
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --no-cache-dir -r requirements.txt
+      - name: Run migrations against fresh DB
+        env:
+          DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/testdb?ssl=disable
+          DB_SCHEMA: mealmate
+          JWT_SECRET: test-secret-for-ci
+          INVITE_CODE: test-invite
+        run: alembic upgrade head
