@@ -85,7 +85,7 @@ Alembic is the **single source of truth** for all schema changes. The FastAPI ap
 - Migrations live in `backend/alembic/versions/`
 - `env.py` handles async execution and schema creation (`CREATE SCHEMA IF NOT EXISTS`)
 - CI validates migrations against a fresh PostgreSQL on every PR
-- Deploy runs `docker compose run --rm --no-deps backend alembic upgrade head` before starting services
+- Deploy runs `docker run --rm --env-file .env --network postgres_infra_network mealmate-backend alembic upgrade head` before starting services
 
 **Workflow for schema changes:**
 1. Edit `backend/app/models.py`

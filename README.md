@@ -47,7 +47,7 @@ npm run dev  # start dev server on :5173
 docker compose up --build
 
 # Run migrations (first time or after model changes)
-docker compose run --rm --no-deps backend alembic upgrade head
+docker run --rm --env-file .env --network postgres_infra_network mealmate-backend alembic upgrade head
 ```
 
 Frontend: `http://localhost:3082` | Backend API: `http://localhost:3082/api`

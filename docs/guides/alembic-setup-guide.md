@@ -322,24 +322,31 @@ jobs:
       - name: Create .env file
         run: |
           cat <<EOF > .env
-          POSTGRES_USER=${{ vars.POSTGRES_USER }}
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB=${{ vars.POSTGRES_DB }}
+          DATABASE_URL=postgresql+asyncpg://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres_shared:5432/${{ vars.POSTGRES_DB }}?ssl=disable
           DB_SCHEMA=${{ vars.DB_SCHEMA }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           INVITE_CODE=${{ vars.INVITE_CODE }}
           EOF
 
       - name: Build backend image
-        run: docker compose -p yourapp-${ENV} build backend
+        run: docker build -t yourapp-backend-migrate ./backend
 
       - name: Run alembic upgrade head
-        run: docker compose -p yourapp-${ENV} run --rm --no-deps backend alembic upgrade head
+        run: |
+          docker run --rm \
+            --env-file .env \
+            --network postgres_infra_network \
+            yourapp-backend-migrate \
+            alembic upgrade head
 
       - name: Cleanup .env
         if: always()
         run: rm -f .env
 ```
+
+**Why `docker run` instead of `docker compose run`?** `docker compose run` manages project networks (create/remove), which conflicts with already-running containers from a previous deploy. Plain `docker run` with `--network` connects directly to the external postgres network — no conflicts.
+
+**Why `DATABASE_URL` explicitly?** `docker compose` injects env vars from `docker-compose.yml`, but `docker run --env-file` only gets what's in the `.env` file. Without `DATABASE_URL`, the app falls back to `localhost:5432` which doesn't exist inside the container.
 
 ## Step 8: Update the deploy workflow
 
