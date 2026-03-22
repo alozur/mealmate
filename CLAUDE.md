@@ -7,8 +7,11 @@ MealMate is a meal planning and grocery list app for couples with different fitn
 - **Backend**: Python 3.12 + FastAPI + async SQLAlchemy + Pydantic v2
 - **Frontend**: React 19 + Vite + TypeScript + Tailwind CSS v4 + shadcn/ui
 - **Database**: PostgreSQL (external shared instance via `postgres_infra_network`)
+- **Migrations**: Alembic (async, single source of truth for schema changes)
+- **Auth**: JWT cookies (30-day expiry) + bcrypt + invite-code registration
 - **AI**: OpenAI API (GPT-4o-mini) for meal plan generation
 - **Infrastructure**: Docker + docker-compose
+- **CI/CD**: GitHub Actions (lint, tests, migration validation, auto-deploy)
 - **Testing**: pytest (backend), Vitest (frontend)
 
 ## Key Commands
@@ -18,6 +21,10 @@ MealMate is a meal planning and grocery list app for couples with different fitn
 - Run frontend tests: `npm run test` (from frontend/)
 - Docker build: `docker compose up --build`
 - Install backend deps: `uv pip install -r requirements.txt`
+- Run migrations: `uv run alembic upgrade head` (from backend/)
+- Generate migration: `uv run alembic revision --autogenerate -m "description"` (from backend/)
+- Migration history: `uv run alembic history` (from backend/)
+- Lint: `uv run ruff check app/ tests/` (from backend/)
 
 ## Project Structure
 ```
@@ -34,13 +41,15 @@ mealmate/
 │   ├── app/
 │   │   ├── __init__.py
 │   │   ├── main.py           # FastAPI app + lifespan
-│   │   ├── database.py       # Async engine, session, Base
-│   │   ├── models.py         # SQLAlchemy models
+│   │   ├── database.py       # Async engine, session, Base, Settings
+│   │   ├── models.py         # SQLAlchemy models (7 tables)
 │   │   ├── schemas.py        # Pydantic request/response schemas
-│   │   ├── dependencies.py   # Shared dependencies
+│   │   ├── auth.py           # JWT + bcrypt authentication utilities
+│   │   ├── dependencies.py   # Shared dependencies (get_current_user)
 │   │   ├── openai_client.py  # OpenAI integration for meal generation
 │   │   └── routes/
 │   │       ├── __init__.py
+│   │       ├── auth.py       # Register, login, logout, me, link-profile
 │   │       ├── profiles.py   # User profile CRUD (name, goal, restrictions)
 │   │       ├── meal_plans.py # Generate & manage weekly meal plans
 │   │       ├── shopping.py   # Consolidated shopping list
@@ -58,20 +67,42 @@ mealmate/
 │   │   ├── components/       # Reusable UI components
 │   │   ├── pages/            # Page components
 │   │   │   ├── Dashboard.tsx
-│   │   │   ├── MealPlan.tsx
-│   │   │   ├── ShoppingList.tsx
-│   │   │   ├── Profiles.tsx
-│   │   │   └── InventoryPage.tsx
+│   │   │   ├── MealPlanPage.tsx
+│   │   │   ├── ShoppingListPage.tsx
+│   │   │   ├── ProfilesPage.tsx
+│   │   │   ├── InventoryPage.tsx
+│   │   │   ├── LoginPage.tsx
+│   │   │   └── RegisterPage.tsx
 │   │   └── types/            # TypeScript type definitions
 │   └── tests/
 └── .agents/skills/           # Installed Claude Code skills
 ```
 
+## Database Migrations (Alembic)
+
+Alembic is the **single source of truth** for all schema changes. The FastAPI app does NOT create tables — Alembic manages everything.
+
+- Migrations live in `backend/alembic/versions/`
+- `env.py` handles async execution and schema creation (`CREATE SCHEMA IF NOT EXISTS`)
+- CI validates migrations against a fresh PostgreSQL on every PR
+- Deploy runs `docker compose run --rm backend alembic upgrade head` before starting services
+
+**Workflow for schema changes:**
+1. Edit `backend/app/models.py`
+2. `uv run alembic revision --autogenerate -m "description"` (from backend/)
+3. Review the generated migration file
+4. `uv run alembic upgrade head` to apply locally
+5. Commit model change + migration file together
+
 ## Database Schema (PostgreSQL, schema: mealmate)
+
+### users
+Authentication accounts.
+- `id` (UUID PK), `email` (unique), `hashed_password`, `created_at`
 
 ### profiles
 Stores user profiles with their fitness goals and dietary preferences.
-- `id` (UUID PK), `name`, `goal` (muscle_gain/fat_loss/maintenance/etc.), `restrictions` (JSON array), `calorie_target`, `protein_target`, `carbs_target`, `fat_target`, `created_at`
+- `id` (UUID PK), `name`, `goal` (muscle_gain/fat_loss/maintenance/etc.), `restrictions` (JSON array), `calorie_target`, `protein_target`, `carbs_target`, `fat_target`, `created_at`, `user_id` (FK to users, unique)
 
 ### meal_plans
 Weekly meal plan metadata.
@@ -94,6 +125,15 @@ Kitchen inventory tracking (fridge/freezer).
 - `id` (UUID PK), `name`, `quantity`, `unit`, `category`, `storage_location` (fridge/freezer), `created_at`
 
 ## API Endpoints
+
+All routes (except `/health` and auth) require authentication via `mealmate_auth` JWT cookie.
+
+### Auth
+- `POST /api/auth/register` - Register new user (requires invite code)
+- `POST /api/auth/login` - Login (sets JWT cookie, 30-day expiry)
+- `POST /api/auth/logout` - Logout (clears cookie)
+- `GET /api/auth/me` - Get current user info
+- `POST /api/auth/link-profile/{id}` - Link a profile to the current user
 
 ### Profiles
 - `GET /api/profiles` - List all profiles
@@ -121,21 +161,33 @@ Kitchen inventory tracking (fridge/freezer).
 - `GET /health` - Health check
 
 ## Development Patterns
-- Follow gym-app patterns: async SQLAlchemy, Pydantic schemas, FastAPI routers
+- Async SQLAlchemy with Pydantic schemas and FastAPI routers
 - Database uses schema isolation (`mealmate` schema) on shared PostgreSQL
 - External `postgres_infra_network` for database connectivity
 - Environment variables via `.env` file and pydantic-settings
-- All IDs are UUID strings
-- Docker port: 3082 (frontend), backend proxied via nginx
+- All IDs are UUID strings (String(36))
+- Alembic manages all schema changes — never use `create_all()` or manual DDL
+- All API routes are protected with `get_current_user` dependency (except health + auth)
+- Docker ports: 3082 (prod frontend), 3083 (dev frontend), backend proxied via nginx
+- Tests use in-memory SQLite with schema overrides (`conftest.py`)
 
 ## Environment Variables
 ```
 DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_shared:5432/${POSTGRES_DB}?ssl=disable
 DB_SCHEMA=mealmate
-OPENAI_API_KEY=sk-...
+OPENAI_API_KEY=sk-...        # Required
 OPENAI_MODEL=gpt-4o-mini
 CORS_ORIGINS=http://localhost:3082,http://localhost:5173
+JWT_SECRET=your-secret-key   # Required — no default
+INVITE_CODE=your-invite-code # Required — no default
 ```
+
+## CI/CD
+
+- **CI** (`ci.yml`): Runs on push/PR to main/dev + manual dispatch. Jobs: lint (ruff), backend tests (pytest), frontend tests (vitest), migration validation (alembic upgrade head against fresh PostgreSQL)
+- **Deploy** (`deploy.yml`): Runs on push to main/dev + manual dispatch. Steps: CI → build images → run migrations → start services. Deploys to self-hosted Synology runner.
+  - `dev` branch → port 3083
+  - `main` branch → port 3082
 
 
 ## Agent Teams Configuration
