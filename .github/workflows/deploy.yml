@@ -36,7 +36,7 @@ jobs:
           OPENAI_MODEL=${{ vars.OPENAI_MODEL }}
           CORS_ORIGINS=${{ vars.CORS_ORIGINS }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
-          INVITE_CODE=${{ secrets.INVITE_CODE }}
+          INVITE_CODE=${{ vars.INVITE_CODE }}
           EOF
 
       - name: Deploy with docker compose
