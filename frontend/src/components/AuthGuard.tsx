@@ -1,4 +1,3 @@
-import { Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import type { ReactNode } from "react";
@@ -15,7 +14,8 @@ export default function AuthGuard({ children }: { children: ReactNode }) {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    window.location.reload();
+    return null;
   }
 
   return <>{children}</>;
