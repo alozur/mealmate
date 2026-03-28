@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
@@ -25,7 +25,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+        DateTime, nullable=False, default=datetime.utcnow
     )
 
     profile: Mapped["Profile | None"] = relationship(back_populates="user")
