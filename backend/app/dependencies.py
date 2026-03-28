@@ -10,7 +10,9 @@ async def get_current_user(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    email = request.headers.get("Remote-Email") or getattr(settings, "DEV_USER_EMAIL", None)
+    email = request.headers.get("Remote-Email") or getattr(
+        settings, "DEV_USER_EMAIL", None
+    )
     if not email:
         raise HTTPException(status_code=401, detail="Not authenticated")
 

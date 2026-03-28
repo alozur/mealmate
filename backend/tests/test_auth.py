@@ -84,9 +84,7 @@ async def test_link_profile_already_taken(
 
     from sqlalchemy import select
 
-    result = await db_session.execute(
-        select(Profile).where(Profile.id == profile_id)
-    )
+    result = await db_session.execute(select(Profile).where(Profile.id == profile_id))
     profile = result.scalar_one()
     profile.user_id = other_user.id
     await db_session.commit()

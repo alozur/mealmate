@@ -40,9 +40,7 @@ async def me(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(Profile).where(Profile.user_id == current_user.id)
-    )
+    result = await db.execute(select(Profile).where(Profile.user_id == current_user.id))
     profile = result.scalar_one_or_none()
     return UserMeResponse(
         id=current_user.id,
