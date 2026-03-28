@@ -17,8 +17,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "http://localhost:3082,http://localhost:5173"
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o-mini"
-    JWT_SECRET: str  # Required — no default. App won't start without it.
-    INVITE_CODE: str  # Required — no default. App won't start without it.
+    DEV_USER_EMAIL: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
