@@ -19,19 +19,16 @@ async function apiRequest<T>(
     "Content-Type": "application/json",
     ...(customHeaders as Record<string, string>),
   };
-  const config: RequestInit = { ...rest, headers, credentials: "include" };
+  const config: RequestInit = { ...rest, headers };
   if (body !== undefined) {
     config.body = typeof body === "string" ? body : JSON.stringify(body);
   }
   const response = await fetch(`${BASE_URL}${endpoint}`, config);
+  if (response.status === 401) {
+    window.location.reload();
+    throw new ApiError(401, "Session expired");
+  }
   if (!response.ok) {
-    // Redirect to login on 401, except for auth endpoints (including /auth/me
-    // which is called on mount — without this exclusion, unauthenticated users
-    // would hit an infinite reload loop)
-    if (response.status === 401 && !endpoint.startsWith("/auth/")) {
-      window.location.href = "/login";
-      return undefined as T;
-    }
     const errorBody = await response.json().catch(() => null);
     const message =
       errorBody?.detail ?? errorBody?.message ?? response.statusText;

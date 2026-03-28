@@ -52,8 +52,8 @@ jobs:
           OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL=${{ vars.OPENAI_MODEL }}
           CORS_ORIGINS=${{ vars.CORS_ORIGINS }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          INVITE_CODE=${{ vars.INVITE_CODE }}
+          DEV_USER_EMAIL=${{ env.ENV == 'dev' && 'alonsozurera@gmail.com' || '' }}
+          TRAEFIK_ENABLE=${{ env.ENV == 'prod' && 'true' || 'false' }}
           EOF
 
       - name: Stop existing services

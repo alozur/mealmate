@@ -1,88 +1,37 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
-from sqlalchemy import func, select
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth import (
-    clear_auth_cookie,
-    create_jwt,
-    hash_password,
-    set_auth_cookie,
-    verify_password,
-)
-from app.database import get_db, settings
+from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import Profile, User
 from app.schemas import (
     MessageResponse,
     ProfileLinkResponse,
-    UserLogin,
     UserMeResponse,
-    UserRegister,
-    UserResponse,
 )
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
-MAX_USERS = 2
 
-
-@router.post("/register", response_model=UserResponse, status_code=201)
-async def register(
-    body: UserRegister,
-    response: Response,
-    db: AsyncSession = Depends(get_db),
-):
-    # Validate invite code first — don't reveal capacity info to invalid callers
-    if body.invite_code != settings.INVITE_CODE:
-        raise HTTPException(status_code=403, detail="Invalid invite code")
-
-    # Hard cap for the 2-person household model
-    count = await db.scalar(select(func.count()).select_from(User))
-    if count >= MAX_USERS:
-        raise HTTPException(status_code=403, detail="Registration closed")
-
-    email = body.email.lower()
-
-    existing = await db.scalar(select(User).where(User.email == email))
-    if existing:
-        raise HTTPException(status_code=409, detail="Email already registered")
-
-    user = User(
-        email=email,
-        hashed_password=hash_password(body.password),
+@router.post("/login", status_code=410)
+async def login_gone():
+    raise HTTPException(
+        status_code=410,
+        detail="Login is now handled by Authelia at https://auth.zurera.cloud",
     )
-    db.add(user)
-    await db.commit()
-    await db.refresh(user)
-
-    token = create_jwt(user.id, user.email)
-    set_auth_cookie(response, token)
-    return user
 
 
-@router.post("/login", response_model=UserResponse)
-async def login(
-    body: UserLogin,
-    response: Response,
-    db: AsyncSession = Depends(get_db),
-):
-    email = body.email.lower()
-    result = await db.execute(select(User).where(User.email == email))
-    user = result.scalar_one_or_none()
-    if not user or not verify_password(body.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-
-    token = create_jwt(user.id, user.email)
-    set_auth_cookie(response, token)
-    return user
+@router.post("/register", status_code=410)
+async def register_gone():
+    raise HTTPException(
+        status_code=410,
+        detail="Registration is now handled by Authelia at https://auth.zurera.cloud",
+    )
 
 
 @router.post("/logout", response_model=MessageResponse)
-async def logout(
-    response: Response,
-    _: User = Depends(get_current_user),
-):
-    clear_auth_cookie(response)
+async def logout():
     return {"message": "Logged out"}
 
 
