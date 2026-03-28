@@ -8,9 +8,8 @@ services:
       - DB_SCHEMA=${DB_SCHEMA:-mealmate}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3082}
-      - JWT_SECRET=${JWT_SECRET}
-      - INVITE_CODE=${INVITE_CODE}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://mealmate.zurera.cloud,http://localhost:3082}
+      - DEV_USER_EMAIL=${DEV_USER_EMAIL:-}
     networks:
       - mealmate-net
       - postgres_infra_network
@@ -26,8 +25,15 @@ services:
       - "${APP_PORT:-3082}:80"
     depends_on:
       - backend
+    labels:
+      - "traefik.enable=${TRAEFIK_ENABLE:-true}"
+      - "traefik.http.routers.mealmate-${ENV:-prod}.rule=Host(`mealmate.${DOMAIN:-zurera.cloud}`)"
+      - "traefik.http.routers.mealmate-${ENV:-prod}.entrypoints=web"
+      - "traefik.http.routers.mealmate-${ENV:-prod}.middlewares=authelia@docker"
+      - "traefik.http.services.mealmate-${ENV:-prod}.loadbalancer.server.port=80"
     networks:
       - mealmate-net
+      - traefik-net
 
 networks:
   mealmate-net:
@@ -37,4 +43,6 @@ networks:
         - subnet: ${SUBNET:-172.28.0.0/16}
           gateway: ${GATEWAY:-172.28.0.1}
   postgres_infra_network:
+    external: true
+  traefik-net:
     external: true
